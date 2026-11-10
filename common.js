@@ -104,6 +104,18 @@
   };
   A.cheer = (s) => { s = s || 1; noise(1.3 * s, { f: 1100, fto: 1500, q: 0.6, g: 0.2 * s, a: 0.25 }); noise(1.1 * s, { f: 2600, q: 0.9, g: 0.09 * s, a: 0.3 }); };
   A.aw = () => noise(0.7, { f: 800, fto: 320, q: 1.2, g: 0.14, a: 0.12 });
+  A.crowd = (lvl) => { // 경기장 웅성임. lvl 0이면 끔
+    const x = A.ctx; if (!x) return;
+    if (!A.amb) {
+      const s = x.createBufferSource(), f = x.createBiquadFilter(), f2 = x.createBiquadFilter(), g = x.createGain();
+      s.buffer = A.nz; s.loop = true; f.type = 'bandpass'; f.frequency.value = 700; f.Q.value = 0.5; f2.type = 'lowpass'; f2.frequency.value = 1800;
+      g.gain.value = 0; s.connect(f); f.connect(f2); f2.connect(g); g.connect(A.master); s.start(); A.amb = g;
+      const l = x.createOscillator(), lg = x.createGain(); l.frequency.value = 0.23; lg.gain.value = 120; l.connect(lg); lg.connect(f.frequency); l.start();
+    }
+    A.amb.gain.setTargetAtTime(lvl * 0.07, x.currentTime, 0.6);
+  };
+  A.squeak = () => { tone(2400 * v(), 0.07, { to: 3100, type: 'triangle', g: 0.05 }); tone(3300 * v(), 0.05, { at: 0.05, type: 'triangle', g: 0.04 }); };
+  A.horn = () => { [233, 277, 349].forEach((f) => tone(f, 0.9, { type: 'sawtooth', g: 0.05, a: 0.02 })); };
   A.bell = () => { [659.25, 523.25, 587.33, 392].forEach((f, i) => { tone(f, 1.1, { at: i * 0.42, g: 0.22, a: 0.004 }); tone(f * 2.76, 0.5, { at: i * 0.42, g: 0.05 }); }); };
   A.tick = () => tone(1200, 0.03, { type: 'square', g: 0.05 });
   A.stamp = () => { tone(90, 0.1, { to: 50, g: 0.5 }); noise(0.04, { type: 'lowpass', f: 500, g: 0.4 }); };
@@ -170,6 +182,7 @@
   };
   fx.text = (x, y, str, col, size) => fx.texts.push({ x, y, str, col: col || C.lime, size: size || 26, life: 0, drift: G.rand(-14, 14) });
   fx.say = (str, sub, col) => { fx.banner = { str, sub, col: col || C.lime, life: 0 }; };
+  fx.clear = () => { fx.banner = null; fx.texts.length = 0; fx.parts.length = 0; };
   fx.update = (dt) => {
     fx.t += dt; fx.trauma = Math.max(0, fx.trauma - 1.3 * dt);
     for (let i = fx.parts.length - 1; i >= 0; i--) {
@@ -186,18 +199,25 @@
     for (const t of fx.texts) {
       const k = Math.min(1, t.life / 0.16), s = t.size * (0.6 + 0.4 * G.ease.back(k));
       c.globalAlpha = t.life > 0.8 ? 1 - (t.life - 0.8) / 0.3 : 1;
-      c.font = s + 'px "Do Hyeon"';
+      c.font = s + 'px "Black Han Sans"';
       const y = t.y - 46 * G.ease.out(Math.min(1, t.life)), x = t.x + t.drift * t.life;
-      c.lineWidth = 5; c.strokeStyle = C.dark; c.strokeText(t.str, x, y); c.fillStyle = t.col; c.fillText(t.str, x, y);
+      c.lineWidth = 5; c.strokeStyle = 'rgba(10,12,14,.85)'; c.strokeText(t.str, x, y); c.fillStyle = t.col; c.fillText(t.str, x, y);
     }
     c.globalAlpha = 1;
     const b = fx.banner;
     if (b) {
-      const k = Math.min(1, b.life / 0.2), s = Math.min(W * 0.2, 86) * (0.5 + 0.5 * G.ease.back(k));
-      c.globalAlpha = b.life > 1.35 ? Math.max(0, 1 - (b.life - 1.35) / 0.35) : 1;
-      c.font = s + 'px "Do Hyeon"'; c.lineWidth = 9; c.strokeStyle = C.dark;
-      c.strokeText(b.str, W / 2, H * 0.27); c.fillStyle = b.col; c.fillText(b.str, W / 2, H * 0.27);
-      if (b.sub) { c.font = '17px "Gothic A1"'; c.lineWidth = 4; c.strokeText(b.sub, W / 2, H * 0.27 + s * 0.72); c.fillStyle = C.lime; c.fillText(b.sub, W / 2, H * 0.27 + s * 0.72); }
+      // 중계 화면 자막처럼 옆에서 밀려 들어오는 띠
+      const k = G.ease.out(Math.min(1, b.life / 0.22)), out = b.life > 1.45 ? Math.min(1, (b.life - 1.45) / 0.25) : 0;
+      const y = H * (fx.bannerY || 0.62), fs = Math.min(W * 0.13, 54), hh = fs * 1.18 + (b.sub ? 26 : 0);
+      c.font = fs + 'px "Black Han Sans"';
+      const tw = c.measureText(b.str).width; c.font = '700 15px "IBM Plex Sans KR"';
+      const sw = b.sub ? c.measureText(b.sub).width : 0, w = Math.max(tw, sw) + 48, x = (W - w) / 2 + (1 - k) * -W + out * W;
+      c.globalAlpha = 1 - out * 0.6;
+      c.fillStyle = 'rgba(12,14,17,.9)'; c.fillRect(x, y - fs * 0.62, w, hh);
+      c.fillStyle = b.col === C.lime ? fx.accent || '#FFD23F' : b.col; c.fillRect(x, y - fs * 0.62, 6, hh);
+      c.textAlign = 'left'; c.textBaseline = 'middle';
+      c.font = fs + 'px "Black Han Sans"'; c.fillStyle = b.col === C.lime ? '#F3F2EE' : b.col; c.fillText(b.str, x + 24, y);
+      if (b.sub) { c.font = '700 15px "IBM Plex Sans KR"'; c.fillStyle = '#C9CDD1'; c.fillText(b.sub, x + 24, y + fs * 0.5 + 12); }
       c.globalAlpha = 1;
     }
   };
@@ -205,80 +225,11 @@
   // ---------- 그리기 도구 ----------
   G.rr = (c, x, y, w, h, r) => { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); };
   G.line = (c, x1, y1, x2, y2, w, col) => { c.strokeStyle = col; c.lineWidth = w; c.lineCap = 'round'; c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); };
-  // 넘기는 숫자 점수판
-  G.flip = (c, x, y, str, h, col) => {
-    const w = h * 0.66; c.font = h * 0.84 + 'px "Do Hyeon"'; c.textAlign = 'center'; c.textBaseline = 'middle';
-    for (let i = 0; i < str.length; i++) {
-      const cx = x + i * (w + 3);
-      c.fillStyle = C.dark; G.rr(c, cx, y, w, h, 3); c.fill();
-      c.fillStyle = col || C.yellow; c.fillText(str[i], cx + w / 2, y + h * 0.56);
-      c.fillStyle = 'rgba(0,0,0,.5)'; c.fillRect(cx, y + h / 2 - 0.6, w, 1.2);
-      c.fillStyle = '#9AA1A6'; c.fillRect(cx + w * 0.26 - 1.5, y - 3, 3, 6); c.fillRect(cx + w * 0.74 - 1.5, y - 3, 3, 6);
-    }
-    return str.length * (w + 3);
-  };
-  G.label = (c, x, y, str, col, size) => { c.font = '700 ' + (size || 12) + 'px "Gothic A1"'; c.textAlign = 'left'; c.textBaseline = 'alphabetic'; c.lineWidth = 3; c.strokeStyle = 'rgba(32,38,43,.55)'; c.lineJoin = 'round'; c.strokeText(str, x, y); c.fillStyle = col || C.lime; c.fillText(str, x, y); };
-  // 체육복 입은 아이. (x,y)는 발 위치, h는 키(px)
-  G.kid = (c, x, y, h, o) => {
-    o = o || {}; const u = h / 8;
-    c.save(); c.translate(x, y);
-    if (o.rot) { c.translate(0, -h * 0.5); c.rotate(o.rot); c.translate(0, h * 0.5); }
-    if (o.sq) c.scale(1 + o.sq * 0.22, 1 - o.sq * 0.22);
-    c.lineCap = 'round';
-    const sp = (o.spread == null ? 0.25 : o.spread) * u;
-    G.line(c, -0.55 * u, -3.2 * u, -0.6 * u - sp, -0.3 * u, 0.95 * u, o.pants || C.navy);
-    G.line(c, 0.55 * u, -3.2 * u, 0.6 * u + sp, -0.3 * u, 0.95 * u, o.pants || C.navy);
-    c.fillStyle = C.dark; c.fillRect(-0.6 * u - sp - 0.6 * u, -0.45 * u, 1.2 * u, 0.45 * u); c.fillRect(0.6 * u + sp - 0.6 * u, -0.45 * u, 1.2 * u, 0.45 * u);
-    const aL = o.aL == null ? 0.2 : o.aL, aR = o.aR == null ? 0.2 : o.aR, al = 2.5 * u;
-    const arm = (sx, a, sgn) => { const ex = sx + sgn * Math.sin(a) * al, ey = -5.7 * u + Math.cos(a) * al; G.line(c, sx, -5.7 * u, ex, ey, 0.72 * u, C.skin); G.line(c, sx, -5.7 * u, sx + (ex - sx) * 0.35, -5.7 * u + (ey + 5.7 * u) * 0.35, 0.8 * u, o.shirt || C.lime); };
-    arm(-1.25 * u, aL, -1); arm(1.25 * u, aR, 1);
-    c.fillStyle = o.shirt || C.lime; G.rr(c, -1.35 * u, -6.2 * u, 2.7 * u, 3.3 * u, 0.5 * u); c.fill();
-    if (o.bib) { c.fillStyle = o.bib; G.rr(c, -1.1 * u, -6.0 * u, 2.2 * u, 2.5 * u, 0.3 * u); c.fill(); }
-    if (o.num != null) { c.fillStyle = o.numCol || C.dark; c.font = 1.5 * u + 'px "Do Hyeon"'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(o.num, 0, -4.7 * u); }
-    c.fillStyle = C.skin; c.beginPath(); c.arc(0, -7.05 * u, 0.98 * u, 0, 6.283); c.fill();
-    c.fillStyle = o.hair || C.hair; c.beginPath();
-    if (o.back) c.arc(0, -7.05 * u, 1.02 * u, 0, 6.283); else c.arc(0, -7.15 * u, 1.02 * u, Math.PI * 1.02, Math.PI * 1.98);
-    c.fill();
-    if (o.cap) { c.fillStyle = o.cap; c.beginPath(); c.arc(0, -7.2 * u, 1.05 * u, Math.PI, 0); c.fill(); c.fillRect(-0.2 * u, -7.3 * u, 1.7 * u, 0.3 * u); }
-    c.restore();
-  };
-  // 배경: 학교 건물과 울타리 (지평선 y, 가운데 x)
-  G.school = (c, cx, hy, w, W) => {
-    const bh = w * 0.2, x0 = cx - w / 2;
-    c.fillStyle = C.treeD; for (let i = -1; i < 9; i++) { const tx = cx - w * 0.9 + i * w * 0.24; c.beginPath(); c.arc(tx, hy - bh * 0.34, bh * 0.42, 0, 6.283); c.fill(); }
-    c.fillStyle = C.tree; for (let i = -1; i < 9; i++) { const tx = cx - w * 0.9 + i * w * 0.24; c.beginPath(); c.arc(tx - bh * 0.1, hy - bh * 0.42, bh * 0.3, 0, 6.283); c.fill(); }
-    c.fillStyle = C.wall; c.fillRect(x0, hy - bh, w, bh);
-    c.fillStyle = C.wallD; c.fillRect(x0, hy - bh, w, bh * 0.07); c.fillRect(cx - w * 0.07, hy - bh * 1.16, w * 0.14, bh * 1.16);
-    c.fillStyle = C.glass;
-    for (let r = 0; r < 3; r++) for (let i = 0; i < 16; i++) { if (i === 7 || i === 8) continue; c.fillRect(x0 + w * 0.02 + i * w * 0.06, hy - bh * 0.86 + r * bh * 0.27, w * 0.042, bh * 0.15); }
-    c.fillStyle = C.lime; c.beginPath(); c.arc(cx, hy - bh * 0.92, bh * 0.11, 0, 6.283); c.fill();
-    c.strokeStyle = C.dark; c.lineWidth = 1.2; c.beginPath(); c.moveTo(cx, hy - bh * 0.92); c.lineTo(cx, hy - bh * 1.0); c.moveTo(cx, hy - bh * 0.92); c.lineTo(cx + bh * 0.06, hy - bh * 0.9); c.stroke();
-    c.fillStyle = C.dark; c.fillRect(cx - w * 0.035, hy - bh * 0.42, w * 0.07, bh * 0.42);
-    c.fillStyle = C.fence; c.fillRect(0, hy - bh * 0.16, W, bh * 0.16);
-    c.fillStyle = 'rgba(243,240,230,.25)'; for (let i = 0; i < W; i += 14) c.fillRect(i, hy - bh * 0.16, 1, bh * 0.16);
-  };
-  G.flag = (c, x, y, wind) => { // 바람 깃발. wind: -1..1
-    G.line(c, x, y, x, y - 34, 2.5, C.dark);
-    if (Math.abs(wind) < 0.02) { c.fillStyle = C.stamp; c.fillRect(x, y - 34, 4, 16); return; }
-    const L = 10 + 20 * Math.abs(wind), s = Math.sign(wind), w = Math.sin(fx.t * (5 + 6 * Math.abs(wind))) * 3;
-    c.fillStyle = C.stamp; c.beginPath(); c.moveTo(x, y - 34); c.quadraticCurveTo(x + s * L * 0.5, y - 36 + w, x + s * L, y - 31 - w); c.lineTo(x + s * L, y - 21 - w); c.quadraticCurveTo(x + s * L * 0.5, y - 24 + w, x, y - 22); c.closePath(); c.fill();
-  };
-  G.hint = (c, x1, y1, x2, y2, bend, str, W, H) => { // 손가락 길잡이
-    const k = (fx.t % 1.6) / 1.1; if (k > 1.25) return;
-    const kk = Math.min(1, k), e = G.ease.out(kk);
-    const mx = (x1 + x2) / 2 + bend, my = (y1 + y2) / 2;
-    const px = (1 - e) * (1 - e) * x1 + 2 * (1 - e) * e * mx + e * e * x2, py = (1 - e) * (1 - e) * y1 + 2 * (1 - e) * e * my + e * e * y2;
-    c.globalAlpha = 0.75; c.strokeStyle = C.lime; c.lineWidth = 4; c.lineCap = 'round'; c.setLineDash([2, 10]);
-    c.beginPath(); c.moveTo(x1, y1); c.quadraticCurveTo(mx, my, x2, y2); c.stroke(); c.setLineDash([]);
-    c.fillStyle = C.lime; c.beginPath(); c.arc(px, py, 13, 0, 6.283); c.fill();
-    c.globalAlpha = 1;
-    if (str) { c.font = '700 16px "Gothic A1"'; c.textAlign = 'center'; c.lineWidth = 4; c.strokeStyle = C.dark; c.lineJoin = 'round'; c.strokeText(str, W / 2, H * 0.92); c.fillStyle = C.lime; c.fillText(str, W / 2, H * 0.92); }
-  };
   G.fonts = (cb) => {
     const f = document.fonts;
     if (!f || !f.load) return cb();
     let done = false; const go = () => { if (!done) { done = true; cb(); } };
-    Promise.all([f.load('20px "Do Hyeon"', '운동장0'), f.load('700 16px "Gothic A1"', '운동장0')]).then(go, go);
+    Promise.all([f.load('20px "Black Han Sans"', '승부처0'), f.load('700 16px "IBM Plex Sans KR"', '승부처0'), f.load('700 20px "Barlow Condensed"', '0123')]).then(go, go);
     setTimeout(go, 2500);
   };
 
@@ -288,9 +239,9 @@
   ui.init = function (cfg) {
     ui.cfg = cfg;
     $('ui').innerHTML =
-      '<section class="screen menu" id="sMenu"><a class="back" href="./">‹ 운동장으로</a>' +
+      '<section class="screen menu" id="sMenu"><a class="back" href="./">‹ 처음으로</a>' +
       '<h1>' + cfg.title + '</h1><p class="tag">' + cfg.tag + '</p>' +
-      '<div class="sheet"><i class="mag m1"></i><i class="mag m2"></i><div class="sheet-head"><b>' + cfg.sheet + '</b><span id="stTotal"></span></div><div class="grid" id="grid"></div></div>' +
+      '<div class="sheet"><div class="sheet-head"><b>' + cfg.sheet + '</b><span id="stTotal"></span></div><div class="grid" id="grid"></div></div>' +
       '<button class="btn main" id="bEndless"><b>' + cfg.endless + '</b><span id="bestTxt"></span></button>' +
       '<div class="opts"><button class="opt" id="oSound">소리</button><button class="opt" id="oCalm">흔들림 줄이기</button></div></section>' +
       '<button id="bPause" aria-label="잠깐 멈춤"><i></i><i></i></button>' +
@@ -303,17 +254,17 @@
     $('oCalm').onclick = () => { opt.calm = !opt.calm; G.save.write(); ui.menu(); };
     ui.menu();
   };
-  ui.start = (i) => { ui.last = i; ui.playing = true; G.paused = false; $('sMenu').classList.remove('on'); $('sSlip').classList.remove('on'); $('bPause').classList.add('on'); fx.banner = null; fx.texts.length = 0; ui.cfg.start(i); };
+  ui.start = (i) => { ui.last = i; ui.playing = true; G.paused = false; $('sMenu').classList.remove('on'); $('sSlip').classList.remove('on'); $('bPause').classList.add('on'); document.body.classList.add('playing'); fx.clear(); ui.cfg.start(i); };
   ui.menu = function () {
     const cfg = ui.cfg, sv = G.save.data[cfg.key], opt = G.save.data.opt;
-    ui.playing = false; G.paused = false;
+    ui.playing = false; G.paused = false; document.body.classList.remove('playing'); if (cfg.idle) cfg.idle();
     let html = '', total = 0;
     for (let i = 0; i < cfg.stages; i++) {
       const s = sv.st[i] || 0, open = i === 0 || (sv.st[i - 1] || 0) > 0; total += s;
-      html += '<button class="cell' + (open ? '' : ' lock') + '" data-i="' + i + '"' + (open ? '' : ' disabled') + ' aria-label="' + (i + 1) + '번, 도장 ' + s + '개"><b>' + (i + 1) + '</b><span class="dots">' + [1, 2, 3].map((n) => '<i' + (s >= n ? ' class="on"' : '') + '></i>').join('') + '</span></button>';
+      html += '<button class="cell' + (open ? '' : ' lock') + '" data-i="' + i + '"' + (open ? '' : ' disabled') + ' aria-label="' + (i + 1) + '번, 별 ' + s + '개"><b>' + (i + 1) + '</b><span class="dots">' + [1, 2, 3].map((n) => '<i' + (s >= n ? ' class="on"' : '') + '></i>').join('') + '</span></button>';
     }
     $('grid').innerHTML = html;
-    $('stTotal').textContent = '도장 ' + total + ' / ' + cfg.stages * 3;
+    $('stTotal').textContent = '★ ' + total + ' / ' + cfg.stages * 3;
     $('bestTxt').textContent = sv.best ? '최고 ' + sv.best + cfg.unit : cfg.endlessTag;
     $('oSound').classList.toggle('on', opt.sound); $('oCalm').classList.toggle('on', opt.calm);
     $('sMenu').classList.add('on'); $('sSlip').classList.remove('on'); $('bPause').classList.remove('on');

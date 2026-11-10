@@ -2,86 +2,70 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#CDAA7A">
-<meta name="description" content="프리킥, 야구, 농구. 학교 운동장에서 하는 스포츠 게임 세 가지.">
-<title>방과 후 운동장</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0E1114">
+<meta name="description" content="9회말 2아웃, 버저비터, 프리킥. 공 하나로 갈리는 세 장면을 직접 해 보는 스포츠 게임.">
+<title>승부처</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Gothic+A1:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="common.css">
 <style>
   body{touch-action:manipulation}
-  .banner{position:absolute;left:50%;top:calc(17.5% + env(safe-area-inset-top));transform:translateX(-50%) rotate(-1.4deg);background:var(--lime);color:var(--ink);
-    padding:10px 22px 8px;white-space:nowrap;border-top:3px solid var(--stamp);border-bottom:3px solid #2B5FA8;text-align:center}
-  .banner::before,.banner::after{content:"";position:absolute;top:50%;width:26px;height:2px;background:var(--dark)}
-  .banner::before{right:100%} .banner::after{left:100%}
-  .banner h1{margin:0;font-size:clamp(34px,10.5vw,50px);line-height:1}
-  .banner p{margin:3px 0 0;font-size:13px;font-weight:700}
-  .spot{position:absolute;display:block;text-decoration:none;color:var(--dark);background:var(--lime);border:2px solid var(--dark);box-shadow:4px 4px 0 var(--dark);padding:8px 12px 7px;min-width:132px}
-  .spot b{display:block;font-family:"Do Hyeon";font-weight:400;font-size:25px;line-height:1.05}
-  .spot span{font-size:12px;font-weight:700}
-  .spot i{position:absolute;width:3px;background:var(--dark);left:18px;top:100%}
-  .spot:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--dark)}
-  .spot:focus-visible{outline:3px solid var(--yellow);outline-offset:3px}
-  #sFk{right:6%;top:36%} #sFk i{height:46px;left:auto;right:30px}
-  #sBb{left:6%;top:63%} #sBb i{height:52px}
-  #sHp{right:5%;top:66%} #sHp i{height:40px;left:auto;right:24px}
-  .note{position:absolute;left:0;right:0;bottom:calc(10px + env(safe-area-inset-bottom));text-align:center;font-size:12px;font-weight:700;color:var(--dark);margin:0}
+  #app{overflow-y:auto;padding:calc(28px + env(safe-area-inset-top)) 18px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px}
+  .live{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--mute)}
+  .live i{width:8px;height:8px;border-radius:50%;background:var(--red)}
+  h1{font-size:clamp(62px,19vw,92px);line-height:.9;margin:2px 0 0;letter-spacing:-1px}
+  .sub{margin:0 0 10px;font-size:16px;font-weight:700;color:#D5D9DD}
+  .card{display:grid;grid-template-columns:1fr auto;gap:4px 12px;text-decoration:none;color:var(--paper);background:var(--panel);
+    border-left:6px solid var(--c);padding:16px 16px 14px 16px;position:relative}
+  .card:active{filter:brightness(.9)}
+  .card:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+  .card small{grid-column:1/-1;font-size:12px;font-weight:700;color:var(--mute)}
+  .card b{font-family:"Black Han Sans";font-weight:400;font-size:32px;line-height:1.05}
+  .card .bug{align-self:center;grid-row:2/4;grid-column:2;background:#0A0C0E;padding:8px 10px;font-family:"Barlow Condensed";font-weight:700;font-size:22px;line-height:1;text-align:right;min-width:86px}
+  .card .bug em{display:block;font-style:normal;font-size:12px;color:var(--mute);font-family:"IBM Plex Sans KR";margin-bottom:4px}
+  .card span{font-size:13px;font-weight:700;color:#C9CDD1}
+  .card .rec{grid-column:1/-1;display:flex;gap:16px;margin-top:8px;padding-top:10px;border-top:1px solid var(--line);font-size:13px;color:var(--mute)}
+  .card .rec strong{font-family:"Barlow Condensed";font-size:18px;color:var(--hi);margin-left:4px}
+  .note{margin:auto 0 0;font-size:12px;color:var(--mute);text-align:center;padding-top:8px}
 </style>
 </head>
 <body>
 <div id="app">
-  <canvas id="cv"></canvas>
-  <div class="banner"><h1>방과 후 운동장</h1><p>종 치면 운동장으로. 오늘은 뭐 할래?</p></div>
-  <a class="spot" id="sFk" href="freekick.html"><b>프리킥 한 방</b><span></span><i></i></a>
-  <a class="spot" id="sBb" href="baseball.html"><b>9회말 2아웃</b><span></span><i></i></a>
-  <a class="spot" id="sHp" href="hoops.html"><b>버저비터</b><span></span><i></i></a>
+  <span class="live"><i></i>지금 승부처</span>
+  <h1>승부처</h1>
+  <p class="sub">공 하나로 결과가 갈리는 세 장면</p>
+  <a class="card" href="baseball.html" style="--c:#E23A3A">
+    <small>야구 · 포수 뒤 시점 타격</small>
+    <b>9회말 2아웃</b>
+    <div class="bug"><em>9회말</em>4 : 5</div>
+    <span>커서를 공에 대고, 들어오는 순간 스윙</span>
+    <div class="rec">끝내기 <strong id="rBb">0/45</strong>홈런 더비 <strong id="bBb">-</strong></div>
+  </a>
+  <a class="card" href="hoops.html" style="--c:#F07A26">
+    <small>농구 · 슛 미터</small>
+    <b>버저비터</b>
+    <div class="bug"><em>4쿼터</em>0:01.6</div>
+    <span>미터 꼭대기에서 손을 뗀다</span>
+    <div class="rec">클러치 <strong id="rHp">0/45</strong>3점 콘테스트 <strong id="bHp">-</strong></div>
+  </a>
+  <a class="card" href="freekick.html" style="--c:#3DBA6A">
+    <small>축구 · 직접 프리킥</small>
+    <b>프리킥 한 방</b>
+    <div class="bug"><em>거리</em>25M</div>
+    <span>벽을 넘기고 골키퍼를 속여라</span>
+    <div class="rec">프리킥 <strong id="rFk">0/90</strong>무한 도전 <strong id="bFk">-</strong></div>
+  </a>
   <p class="note">기록은 이 기기에 저장된다</p>
 </div>
 <script src="common.js"></script>
 <script>
-(function () {
-  const C = G.C, d = G.save.data, cv = document.getElementById('cv');
-  [['sFk', 'fk', 90], ['sBb', 'bb', 45], ['sHp', 'hp', 45]].forEach(([id, k, max]) => {
-    const n = d[k].st.reduce((a, b) => a + (b || 0), 0);
-    document.querySelector('#' + id + ' span').textContent = '도장 ' + n + ' / ' + max;
+  const d = G.save.data, sum = (k) => d[k].st.reduce((a, b) => a + (b || 0), 0);
+  [['Bb', 'bb', 45, '개'], ['Hp', 'hp', 45, '점'], ['Fk', 'fk', 90, '골']].forEach(([id, k, max, u]) => {
+    document.getElementById('r' + id).textContent = sum(k) + '/' + max;
+    document.getElementById('b' + id).textContent = d[k].best ? d[k].best + u : '-';
   });
-  function tree(c, x, y, r) { c.fillStyle = C.treeD; c.beginPath(); c.arc(x, y, r, 0, 6.283); c.fill(); c.fillStyle = C.tree; c.beginPath(); c.arc(x - r * 0.2, y - r * 0.2, r * 0.68, 0, 6.283); c.fill(); }
-  function draw(V) {
-    const c = V.ctx, W = V.W, H = V.H;
-    c.fillStyle = C.dirt; c.fillRect(0, 0, W, H);
-    // 울타리와 나무
-    c.strokeStyle = C.fence; c.lineWidth = 6; c.strokeRect(5, 5, W - 10, H - 10);
-    for (let i = 0; i < 9; i++) { tree(c, 20, H * 0.24 + i * H * 0.085, W * 0.045); if (i < 4 || i > 6) tree(c, W - 18, H * 0.2 + i * H * 0.09, W * 0.04); }
-    // 학교 건물 (위에서 본 옥상)
-    c.fillStyle = C.wallD; c.fillRect(W * 0.1, H * 0.035, W * 0.8, H * 0.1);
-    c.fillStyle = C.wall; c.fillRect(W * 0.1 + 6, H * 0.035 + 6, W * 0.8 - 12, H * 0.1 - 12);
-    c.fillStyle = C.wallD; for (let i = 0; i < 5; i++) c.fillRect(W * 0.17 + i * W * 0.15, H * 0.06, W * 0.05, H * 0.03);
-    c.fillStyle = C.steel; c.fillRect(W * 0.42, H * 0.135, W * 0.16, H * 0.022);
-    // 트랙과 축구장
-    const cx = W * 0.5, cy = H * 0.455, rx = W * 0.4, ry = H * 0.145;
-    c.strokeStyle = C.track; c.lineWidth = W * 0.085; G.rr(c, cx - rx, cy - ry, rx * 2, ry * 2, ry); c.stroke();
-    c.strokeStyle = 'rgba(243,240,230,.75)'; c.lineWidth = 1.2; for (const k of [-0.028, 0, 0.028]) { G.rr(c, cx - rx - W * k, cy - ry - W * k, (rx + W * k) * 2, (ry + W * k) * 2, ry + W * k); c.stroke(); }
-    c.strokeStyle = C.lime; c.lineWidth = 2.5; const fw = rx * 1.36, fh = ry * 1.24;
-    c.strokeRect(cx - fw / 2, cy - fh / 2, fw, fh); c.beginPath(); c.moveTo(cx, cy - fh / 2); c.lineTo(cx, cy + fh / 2); c.stroke();
-    c.beginPath(); c.arc(cx, cy, fh * 0.2, 0, 6.283); c.stroke();
-    for (const s of [-1, 1]) { c.strokeRect(s > 0 ? cx + fw / 2 - fw * 0.15 : cx - fw / 2, cy - fh * 0.3, fw * 0.15, fh * 0.6); c.fillStyle = C.lime; c.fillRect(cx + (s * fw) / 2 - (s > 0 ? 0 : 7), cy - fh * 0.12, 7, fh * 0.24); }
-    c.fillStyle = '#FBFAF5'; c.strokeStyle = C.dark; c.lineWidth = 1.5; c.beginPath(); c.arc(cx + fw * 0.22, cy + fh * 0.08, 5, 0, 6.283); c.fill(); c.stroke();
-    // 야구: 왼쪽 아래 모래 위에 석회로 그린 다이아몬드
-    const bx = W * 0.26, by = H * 0.86, bs = W * 0.15;
-    c.strokeStyle = C.lime; c.lineWidth = 2.5; c.beginPath(); c.moveTo(bx, by); c.lineTo(bx + bs, by - bs); c.lineTo(bx, by - bs * 2); c.lineTo(bx - bs, by - bs); c.closePath(); c.stroke();
-    c.fillStyle = C.dirtD; c.beginPath(); c.arc(bx, by - bs, bs * 0.2, 0, 6.283); c.fill();
-    c.fillStyle = C.lime; for (const p of [[0, 0], [bs, -bs], [0, -bs * 2], [-bs, -bs]]) { c.save(); c.translate(bx + p[0], by + p[1]); c.rotate(0.785); c.fillRect(-4.5, -4.5, 9, 9); c.restore(); }
-    c.strokeStyle = C.steel; c.lineWidth = 4; c.beginPath(); c.arc(bx, by, bs * 0.42, 0.5, 2.64); c.stroke();
-    // 농구장: 오른쪽 아래 초록 우레탄
-    const hx = W * 0.56, hy = H * 0.775, hw = W * 0.36, hh = H * 0.15;
-    c.fillStyle = C.turf; c.fillRect(hx, hy, hw, hh); c.strokeStyle = C.lime; c.lineWidth = 2.2; c.strokeRect(hx + 5, hy + 5, hw - 10, hh - 10);
-    c.beginPath(); c.moveTo(hx + 5, hy + hh / 2); c.lineTo(hx + hw - 5, hy + hh / 2); c.stroke(); c.beginPath(); c.arc(hx + hw / 2, hy + hh / 2, hw * 0.1, 0, 6.283); c.stroke();
-    for (const s of [0, 1]) { const ky = s ? hy + hh - 5 - hh * 0.26 : hy + 5; c.fillStyle = C.track; c.fillRect(hx + hw * 0.36, ky, hw * 0.28, hh * 0.26); c.strokeRect(hx + hw * 0.36, ky, hw * 0.28, hh * 0.26); c.fillStyle = C.rim; c.beginPath(); c.arc(hx + hw / 2, s ? hy + hh - 14 : hy + 14, 4, 0, 6.283); c.fill(); }
-  }
-  G.canvas(cv, draw);
-})();
 </script>
 </body>
 </html>
