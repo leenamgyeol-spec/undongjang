@@ -186,17 +186,17 @@ function stepBall(b, dt) {
   const nx = b.p.x - cx, ny = b.p.y - RIM_Y, nz = b.p.z - cz, d = Math.hypot(nx, ny, nz);
   if (d < BR + 0.01) {
     const n = new THREE.Vector3(nx / d, ny / d, nz / d), vn = b.v.dot(n);
-    if (vn < 0) { b.v.addScaledVector(n, -1.55 * vn); b.v.multiplyScalar(0.88); if (b.rimT <= 0) { A.rim(); b.rimT = 0.1; fx.shake(0.05); } b.touch = true; }
+    if (vn < 0) { b.v.addScaledVector(n, -1.55 * vn); b.v.multiplyScalar(0.88); if (b.rimT <= 0) { A.clang(-vn); b.rimT = 0.08; fx.shake(0.04 + 0.03 * Math.min(1, -vn / 5)); } b.touch = true; }
     b.p.set(cx, RIM_Y, cz).addScaledVector(n, BR + 0.01);
   }
-  if (b.p.z - BR < BOARD_Z && b.v.z < 0 && Math.abs(b.p.x) < 0.92 && b.p.y > 2.9 && b.p.y < 3.97 && b.p.z > BOARD_Z - 0.2) { b.p.z = BOARD_Z + BR; b.v.z = -b.v.z * 0.62; A.bounce(0.5); b.touch = true; }
+  if (b.p.z - BR < BOARD_Z && b.v.z < 0 && Math.abs(b.p.x) < 0.92 && b.p.y > 2.9 && b.p.y < 3.97 && b.p.z > BOARD_Z - 0.2) { A.board(-b.v.z); b.p.z = BOARD_Z + BR; b.v.z = -b.v.z * 0.62; b.touch = true; }
   if (!b.made && py >= RIM_Y && b.p.y < RIM_Y && b.v.y < 0 && Math.hypot(b.p.x, b.p.z) < RIM - 0.03) { b.made = true; scored(b); }
   if (b.p.y < BR) { b.p.y = BR; if (b.v.y < -1) A.bounce(Math.min(1, -b.v.y / 7)); b.v.y = -b.v.y * 0.68; b.v.x *= 0.85; b.v.z *= 0.85; b.floor++; }
   b.mesh.position.copy(b.p); b.mesh.rotation.x -= dt * 8;
   if (b.made && b.p.y < RIM_Y && b.p.y > RIM_Y - 0.5) { const k = Math.hypot(b.p.x, b.p.z); if (k > 0.1) { b.v.x *= 0.9; b.v.z *= 0.9; } }
 }
 function scored(b) {
-  S.netT = 0; A.net();
+  S.netT = 0; A.swish(!b.touch);
   const pts = b.val; S.score += pts; S.made++; if (b.green) S.greens++;
   if (S.mode === 'contest') { const r = S.rackRes[b.rack]; if (r) r[b.slot] = 1; fx.text(H2.W / 2, H2.H * 0.36, '+' + pts, b.val > 1 ? '#FFD23F' : '#F3F2EE', 30); if (b.val > 1) S.crowd.hype = 0.5; }
   else { S.crowd.hype = 0.8; A.cheer(1.1); }

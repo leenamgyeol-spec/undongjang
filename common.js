@@ -91,6 +91,28 @@
   A.post = () => { [523, 1318, 2140, 3310].forEach((f, i) => tone(f * v(), 0.7 - i * 0.12, { g: 0.22 / (i + 1), type: i ? 'sine' : 'triangle' })); noise(0.03, { f: 3000, g: 0.3 }); };
   A.rim = () => { [820, 1740, 2650].forEach((f, i) => tone(f * v(), 0.25, { g: 0.16 / (i + 1), type: 'triangle' })); };
   A.net = () => noise(0.28, { type: 'highpass', f: 2500, fto: 900, q: 0.5, g: 0.3, a: 0.02 });
+  // 농구: 그물을 스치는 '촥' 소리. clean이면 림을 안 건드린 깨끗한 슛
+  A.swish = (clean) => {
+    const k = clean ? 1 : 0.75;
+    noise(0.2, { f: 5200 * v(), fto: 2400, q: 0.9, g: 0.42 * k, a: 0.012 });
+    noise(0.16, { at: 0.03, type: 'highpass', f: 3600, fto: 1500, q: 0.6, g: 0.22 * k, a: 0.01 });
+    noise(0.22, { at: 0.09, f: 1900, fto: 900, q: 1.4, g: 0.12 * k, a: 0.03 }); // 그물이 출렁이며 다시 스치는 소리
+    if (clean) tone(240, 0.05, { at: 0.02, to: 120, g: 0.06 });
+  };
+  // 림: 쇠고리를 때리는 '깡'. force는 부딪힌 속도(m/s)
+  A.clang = (force) => {
+    const f = Math.min(1, (force || 2) / 6), base = 410 * v();
+    [[1, 0.5], [2.32, 0.3], [4.25, 0.18], [6.63, 0.1], [8.9, 0.06]].forEach(([r, g], i) => tone(base * r, 0.18 + 0.5 * f - i * 0.04, { g: g * (0.25 + 0.55 * f), type: i ? 'sine' : 'triangle', a: 0.002 }));
+    tone(118 * v(), 0.14, { to: 70, g: 0.25 * f + 0.08 }); // 림 스프링이 흔들리는 낮은 '둥'
+    noise(0.025, { f: 3400, q: 1.2, g: 0.35 * f + 0.1 });
+  };
+  // 백보드: 유리판에 맞는 둔탁한 소리와 짧은 떨림
+  A.board = (force) => {
+    const f = Math.min(1, (force || 3) / 7);
+    tone(170 * v(), 0.16, { to: 85, g: 0.35 * f + 0.1 });
+    noise(0.12, { f: 1300, q: 2, g: 0.18 * f + 0.05 });
+    tone(2300 * v(), 0.09, { at: 0.01, g: 0.03 * f });
+  };
   A.crack = (q) => { noise(0.04, { f: 2200 + 1500 * q, q: 1.5, g: 0.6 }); tone(900 * v(), 0.07, { to: 300, type: 'triangle', g: 0.3 + 0.2 * q }); tone(260, 0.09, { to: 120, g: 0.3 }); };
   A.whoosh = () => noise(0.16, { f: 500, fto: 1600, q: 1.2, g: 0.18, a: 0.05 });
   A.mitt = () => { noise(0.06, { type: 'lowpass', f: 1400, g: 0.5 }); tone(140, 0.08, { to: 70, g: 0.3 }); };
