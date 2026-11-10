@@ -18,10 +18,11 @@
   h1{font-size:clamp(62px,19vw,92px);line-height:.9;margin:2px 0 0;letter-spacing:-1px}
   .sub{margin:0 0 10px;font-size:16px;font-weight:700;color:#D5D9DD}
   .card{display:grid;grid-template-columns:1fr auto;gap:4px 12px;text-decoration:none;color:var(--paper);background:var(--panel);
-    border-left:6px solid var(--c);padding:16px 16px 14px 16px;position:relative}
+    padding:16px;position:relative}
   .card:active{filter:brightness(.9)}
   .card:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
-  .card small{grid-column:1/-1;font-size:12px;font-weight:700;color:var(--mute)}
+  .card small{grid-column:1/-1;font-size:12px;font-weight:700;color:var(--mute);display:flex;align-items:center;gap:7px}
+  .card small::before{content:"";width:9px;height:9px;background:var(--c)}
   .card b{font-family:"Black Han Sans";font-weight:400;font-size:32px;line-height:1.05}
   .card .bug{align-self:center;grid-row:2/4;grid-column:2;background:#0A0C0E;padding:8px 10px;font-family:"Barlow Condensed";font-weight:700;font-size:22px;line-height:1;text-align:right;min-width:86px}
   .card .bug em{display:block;font-style:normal;font-size:12px;color:var(--mute);font-family:"IBM Plex Sans KR";margin-bottom:4px}

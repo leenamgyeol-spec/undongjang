@@ -42,10 +42,10 @@ h1,.dh{font-family:"Black Han Sans","IBM Plex Sans KR",sans-serif;font-weight:40
 .dots i.on{background:var(--hi)}
 
 .btn{border:0;background:var(--panel2);color:var(--paper);padding:14px 16px;font-size:16px;font-weight:700;
-  display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;border-left:5px solid var(--line)}
+  display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left}
 .btn b{font-family:"Black Han Sans";font-weight:400;font-size:22px}
 .btn span{font-size:13px;font-weight:700;color:var(--mute)}
-.btn.main{background:var(--paper);color:var(--ink);border-left-color:var(--acc)}
+.btn.main{background:var(--paper);color:var(--ink)}
 .btn.main span{color:#4A525A}
 .btn:active{filter:brightness(.88)}
 .btn.plain{background:none;border:0;text-decoration:underline;text-underline-offset:4px;font-weight:700;font-size:15px;padding:10px 6px;justify-content:center;color:var(--mute)}
